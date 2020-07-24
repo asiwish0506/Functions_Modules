@@ -1,0 +1,237 @@
+# 버전 체크
+
+# This Python 3 environment comes with many helpful analytics libraries installed
+# It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python
+
+#load packages
+import sys #access to system parameters https://docs.python.org/3/library/sys.html
+print("Python version: {}". format(sys.version))
+
+import pandas as pd #collection of functions for data processing and analysis modeled after R dataframes with SQL like features
+print("pandas version: {}". format(pd.__version__))
+
+import matplotlib #collection of functions for scientific and publication-ready visualization
+print("matplotlib version: {}". format(matplotlib.__version__))
+
+import numpy as np #foundational package for scientific computing
+print("NumPy version: {}". format(np.__version__))
+
+import scipy as sp #collection of functions for scientific computing and advance mathematics
+print("SciPy version: {}". format(sp.__version__)) 
+
+import IPython
+from IPython import display #pretty printing of dataframes in Jupyter notebook
+print("IPython version: {}". format(IPython.__version__)) 
+
+import sklearn #collection of machine learning algorithms
+print("scikit-learn version: {}". format(sklearn.__version__))
+
+#misc libraries
+import random
+import time
+
+#ignore warnings
+import warnings
+warnings.filterwarnings('ignore')
+print('-'*25)
+
+# 결측치 비율 및 시각화
+
+all_data_na = (all_data.isnull().sum() / len(all_data)) * 100
+all_data_na = all_data_na.drop(all_data_na[all_data_na == 0].index).sort_values(ascending=False)[:30]
+missing_data = pd.DataFrame({'Missing Ratio' :all_data_na})
+missing_data.head(20)
+
+f, ax = plt.subplots(figsize=(15, 12))
+plt.xticks(rotation='90')
+sns.barplot(x=all_data_na.index, y=all_data_na)
+plt.xlabel('Features', fontsize=15)
+plt.ylabel('Percent of missing values', fontsize=15)
+plt.title('Percent missing data by feature', fontsize=15)
+
+# 카테고리, 수치형 데이터 나누기
+train_n=train[[c for c in train.columns if train[c].dtypes!='O']].copy()
+test_n=test[[c for c in test.columns if test[c].dtypes!='O']].copy()
+
+train_c=train[[c for c in train.columns if train[c].dtypes=='O']].copy()
+test_c=test[[c for c in test.columns if test[c].dtypes=='O']].copy()
+
+# 범주형 변수 요약보기
+train_df.describe(include=['O'])
+
+# 범주형 변수 히스토그램 요약 그리기
+g = sns.FacetGrid(train_df, col='Survived')
+g.map(plt.hist, 'Age', bins=20)
+
+# 열 전체에 함수 적용하기
+train['Has_Cabin'] = train["Cabin"].apply(lambda x: 0 if type(x) == float else 1)
+
+# 혹은 두 변수를 동시에
+grid = sns.FacetGrid(train_df, col='Survived', row='Pclass', size=2.2, aspect=1.6)
+grid.map(plt.hist, 'Age', alpha=.5, bins=20)
+grid.add_legend();
+
+# 상관관계 
+
+sns.set()
+cols = ['SalePrice', 'OverallQual', 'GrLivArea', 'GarageCars', 'TotalBsmtSF', 'FullBath', 'YearBuilt']
+sns.pairplot(df_train[cols], size = 2.5)
+plt.show();
+
+# VIF 테이블 만들기
+
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+def checkVIF(X):
+    vif = pd.DataFrame()
+    vif['Features'] = X.columns
+    vif['VIF'] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
+    vif['VIF'] = round(vif['VIF'], 2)
+    vif = vif.sort_values(by = "VIF", ascending = False)
+    return(vif)
+    
+# 아웃라이어
+
+# Outlier detection 
+
+def detect_outliers(df,n,features):
+    """
+    Takes a dataframe df of features and returns a list of the indices
+    corresponding to the observations containing more than n outliers according
+    to the Tukey method.
+    """
+    outlier_indices = []
+    
+    # iterate over features(columns)
+    for col in features:
+        # 1st quartile (25%)
+        Q1 = np.percentile(df[col], 25)
+        # 3rd quartile (75%)
+        Q3 = np.percentile(df[col],75)
+        # Interquartile range (IQR)
+        IQR = Q3 - Q1
+        
+        # outlier step
+        outlier_step = 1.5 * IQR
+        
+        # Determine a list of indices of outliers for feature col
+        outlier_list_col = df[(df[col] < Q1 - outlier_step) | (df[col] > Q3 + outlier_step )].index
+        
+        # append the found outlier indices for col to the list of outlier indices 
+        outlier_indices.extend(outlier_list_col)
+        
+    # select observations containing more than 2 outliers
+    outlier_indices = Counter(outlier_indices)        
+    multiple_outliers = list( k for k, v in outlier_indices.items() if v > n )
+    
+    return multiple_outliers   
+
+# detect outliers from Age, SibSp , Parch and Fare
+Outliers_to_drop = detect_outliers(train,2,["Age","SibSp","Parch","Fare"])
+
+
+# 이진 분류 문제 양성 비율 구하기 (분류 타깃값이 0,1이어야 함)
+
+g = sns.factorplot(x="SibSp",y="Survived",data=train,kind="bar", size = 6 , 
+palette = "muted")
+g.despine(left=True)
+g = g.set_ylabels("survival probability")
+
+# 크로스테이블 만들기
+pd.crosstab([data.Embarked,data.Pclass],[data.Sex,data.Survived],margins=True).style.background_gradient(cmap='summer_r')
+
+# seaborn colorplot
+sns.barplot(plt1[0],plt1.index,ax=ax[1],palette=sns.color_palette('inferno_r',15))
+
+
+# 데이터프레임 최적화!
+
+def reduce_mem_usage(df):
+
+    start_mem = df.memory_usage().sum() / 1024**2
+    
+        for col in df.columns:
+            col_type = df[col].dtype
+            
+                if col_type != object:
+                    c_min = df[col].min()
+                    c_max = df[col].max()
+                if str(col_type)[:3] == 'int':
+                    if c_min > np.iinfo(np.int8).min and c_max < np.iinfo(np.int8).max:
+                       df[col] = df[col].astype(np.int8)
+                    elif c_min > np.iinfo(np.int16).min and c_max < np.iinfo(np.int16).max:
+                         df[col] = df[col].astype(np.int16)
+                    elif c_min > np.iinfo(np.int32).min and c_max < np.iinfo(np.int32).max:
+                         df[col] = df[col].astype(np.int32)
+                    elif c_min > np.iinfo(np.int64).min and c_max < np.iinfo(np.int64).max:
+                         df[col] = df[col].astype(np.int64)
+
+                    else: 
+                         if c_min > np.finfo(np.float16).min and c_max < np.finfo(np.float16).max:
+                            df[col] = df[col].astype(np.float16) 
+                         elif c_min > np.finfo(np.float32).min and c_max < np.finfo(np.float32).max:
+                              df[col] = df[col].astype(np.float32) 
+                         else:
+                              df[col] = df[col].astype(np.float64) #else: #df[col] = df[col].astype('category')
+                             
+ end_mem = df.memory_usage().sum() / 1024**2 
+ print('Memory usage of dataframe is {:.2f} MB --> {:.2f} MB (Decreased by {:.1f}%)'.format(
+ start_mem, end_mem, 100 * (start_mem - end_mem) / start_mem))
+ 
+ return df
+
+# corr table
+
+plt.figure(figsize=(14,12))
+corr = df.corr()
+sns.heatmap(corr, mask = corr <0.8, linewidth=0.5, cmap='Blues')
+
+
+# 데이터프레임 섞기
+df = df.sample(frac=1)
+
+
+# 결측치 비율
+
+def missing_percentage(df):
+    """This function takes a DataFrame(df) as input and returns two columns, total missing values and total missing values percentage"""
+    total = df.isnull().sum().sort_values(ascending = False)
+    percent = round(df.isnull().sum().sort_values(ascending = False)/len(df)*100,2)
+    return pd.concat([total, percent], axis=1, keys=['Total','Percent'])
+    
+# 수치형 변수에 대해 이진 타깃값 히스토그램
+
+fig, axes = plt.subplots(15, 2, figsize=(10, 20))
+malignant = cancer.data[cancer.target == 0]
+benign = cancer.data[cancer.target == 1]
+
+ax = axes.ravel()
+
+for i in range(30):
+    _, bins = np.histogram(cancer.data[:, i], bins=50)
+    ax[i].hist(malignant[:, i], bins=bins, color=mglearn.cm3(0), alpha=.5)
+    ax[i].hist(benign[:, i], bins=bins, color=mglearn.cm3(2), alpha=.5)
+    ax[i].set_title(cancer.feature_names[i])
+    ax[i].set_yticks(())
+ax[0].set_xlabel("특성 크기")
+ax[0].set_ylabel("빈도")
+ax[0].legend(["악성", "양성"], loc="best")
+fig.tight_layout()
+
+
+# data overview하기
+df_overview = data_overview(df)
+df_overview
+
+# ★
+from viz_utils import *
+from ml_utils import *
+from custom_transformers import *
+
+# 수치형 변수에 대해 간단하게 lineplot과 박스plot을 한 번에 그려줌
+numplot_analysis(df[num_cols], hue='risk', color_hue=color_list)
+
+# 비슷한 걸 카테고리형 변수에 대해 해줌
+cat_features = [col for col, dtype in df.dtypes.items() if dtype == 'object']
+catplot_analysis(df[cat_features], palette='plasma')
+
+catplot_percentage_analysis(df[cat_features], hue='risk', palette=rev_color_list)
