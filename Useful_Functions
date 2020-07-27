@@ -235,3 +235,9 @@ cat_features = [col for col, dtype in df.dtypes.items() if dtype == 'object']
 catplot_analysis(df[cat_features], palette='plasma')
 
 catplot_percentage_analysis(df[cat_features], hue='risk', palette=rev_color_list)
+
+# df에서 특정 컬럼 제외하고 선택하기
+
+df_new = df[df.columns.difference(['B', 'D'])] <- B와 D를 제외한 컬럼들을 선택한다는 의미
+
+
