@@ -128,6 +128,11 @@ def detect_outliers(df,n,features):
 # detect outliers from Age, SibSp , Parch and Fare
 Outliers_to_drop = detect_outliers(train,2,["Age","SibSp","Parch","Fare"])
 
+train.loc[Outliers_to_drop] # Show the outliers rows
+
+train = train.drop(Outliers_to_drop, axis = 0).reset_index(drop=True)
+
+
 
 # 이진 분류 문제 양성 비율 구하기 (분류 타깃값이 0,1이어야 함)
 
